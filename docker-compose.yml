@@ -1,38 +1,39 @@
 version: "2"
 services:
-    www:
-        build: .
-        ports: 
-            - "8001:80"
+    nginx:
+        image: nginx:latest
+        ports:
+            - "8081:80"
+        environment:
+            NGINX_STATIC_CONTENT_OPEN_FILE_CACHE: "off"
+            NGINX_ERROR_LOG_LEVEL: debug
+            NGINX_BACKEND_HOST: php
+            NGINX_SERVER_ROOT: /var/www/html
         volumes:
-            - ./www:/var/www/html/
+            - ./www:/var/www/html
+            - ./site.conf:/etc/nginx/conf.d/site.conf
+        links:
+            - php
+
+    php:
+        build: .
+        volumes:
+            - ./www:/var/www/html
         links:
             - db
-        networks:
-            - default
+
     db:
         image: mysql
-        ports: 
-            - "3306:3306"
+        ports:
+            - 3306:3306
         environment:
-            MYSQL_DATABASE: myDb
+            MYSQL_DATABASE: petroldb
             MYSQL_USER: user
             MYSQL_PASSWORD: test
-            MYSQL_ROOT_PASSWORD: test 
+            MYSQL_ROOT_PASSWORD: test
         volumes:
             - ./dump:/docker-entrypoint-initdb.d
             - persistent:/var/lib/mysql
-        networks:
-            - default
-    phpmyadmin:
-        image: phpmyadmin/phpmyadmin
-        links: 
-            - db:db
-        ports:
-            - 8000:80
-        environment:
-            MYSQL_USER: user
-            MYSQL_PASSWORD: test
-            MYSQL_ROOT_PASSWORD: test 
+
 volumes:
     persistent:
